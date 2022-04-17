@@ -1,30 +1,52 @@
-const express = require('express');
-const app = express();
-const { data } = require('./db/db.json');
+const fs = require('fs');
 const path = require('path');
+const express = require('express');
+const { newNote } = require('./db/db.json');
 
-//middleware
+const PORT = process.env.PORT || 3001;
+
+const app = express();
+
 app.use(express.static(__dirname + '/public'));
+// parse incoming string or array data
+app.use(express.urlencoded({ extended: true }));
+// parse incoming JSON data
+app.use(express.json());
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-//The following API routes should be created:
-//GET /api/notes should read the db.json file and return all saved notes as JSON.
-
-//The application should have a db.json file on the back end, which will be used to store and 
-//retrieve notes using the fs module. 
-
+  //////Function tnat accepts post data
+  function createNewNote(body, notesArray) {
+    const noteData = body;
+    notesArray.push(noteData);
+    fs.writeFileSync(
+        path.join(__dirname, './db/db.json'),
+        JSON.stringify({ newNote: notesArray }, null, 2)
+    );
+  
+    return noteData;
+  }
 
 /////testing route in progress
 
 app.get('/api/notes', (req, res) => {
-    let results = data;
+    let results = newNote;
     console.log(req.query)
     res.json(results);
   });
-////////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////////
+app.post('/api/notes', (req, res) => {
+    // req.body is where our incoming content will be
+    req.body.id = newNote.length.toString();
+
+    //add data to json file and data array in this function
+      const noteData = createNewNote(req.body, newNote);
+
+    res.json(noteData);
+  });
+
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, './public/index.html'));
@@ -34,27 +56,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, './public/notes.html'));
   });
 
-
-///////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////////////
-
-
-//POST /api/notes should receive a new note to save on the request body, add it to the db.json file, 
-//and then return the new note to the client. You'll need to find a way to give each note a unique id 
-//when it's saved (look into npm packages that could do this for you).
-
-
-    app.post('/api/notetaker', (req, res) => {
-        // req.body is where our incoming content will be
-        console.log(req.body);
-        res.json(req.body);
-      });
-
-
-
-
 ////last
-app.listen(3001, () => {
-    console.log(`API server now on port 3001!`);
+app.listen(PORT, () => {
+    console.log(`API server now on port ${PORT}!`);
   });
